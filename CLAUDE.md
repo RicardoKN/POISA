@@ -155,16 +155,28 @@ Sections: Sales summary → Daily breakdown (bar chart) → Top 10 products → 
 
 > **Update this section at the start of each session.**
 
-**Phase:** [ ] Phase 1 — Setup | [ ] Phase 2 — Design | [x] Phase 3 — Core Dev | [ ] Phase 4 — Sales & Reports | [ ] Phase 5 — Polish
+**Phase:** [x] Phase 1 — Setup | [x] Phase 2 — Design | [x] Phase 3 — Core Dev | [x] Phase 4 — Sales & Reports | [ ] Phase 5 — Polish
 
 **Current week focus:**
-- [ ] *(e.g. Week 4 — Auth & navigation)*
+- [x] Week 4 — Auth & navigation
+- [x] Week 5 — Stock Input module
+- [x] Week 6 — Stock Balance module
+- [x] Week 7 — Sales screen (product grid, cart, discounts)
+- [x] Week 8 — Payment modal, receipt, sale history
+- [x] Week 9 — Weekly reports + PDF export
 
 **Last completed:**
-- *(e.g. IPC bridge configured, seed data working)*
+- Sales IPC: create sale (transaction with stock deduction), get all/by ID, void sale (restores stock)
+- Reports IPC: weekly summary, daily breakdown, top 10 by revenue/units, stock movement
+- POS Sales screen: product grid, cart with add/remove/qty stepper, item + cart discounts (BWP/%)
+- PaymentModal: cash (quick-fill + change calc), card, mixed (split)
+- Receipt: on-screen preview with print support
+- Sale history: today's transactions modal
+- Weekly Reports: date range picker, 5 KPI tiles, Recharts bar chart, top products, stock movement table
+- PDF export via jsPDF + AutoTable (branded layout with header, tables, page numbers)
 
 **Blocked on:**
-- *(e.g. Waiting for client design approval)*
+- *(none)*
 
 ---
 
