@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Package,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react'
 import { formatCurrency } from '../utils/formatters'
 
@@ -108,7 +109,7 @@ export default function Dashboard() {
         </div>
 
         {loading ? (
-          <p className="text-sm text-ink-secondary">Loading...</p>
+          <div className="py-4"><Loader2 size={20} className="animate-spin text-ink-muted" /></div>
         ) : !stats?.lowStockItems?.length ? (
           <p className="text-sm text-ink-secondary">All products are well stocked.</p>
         ) : (

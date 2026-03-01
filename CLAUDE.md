@@ -155,7 +155,7 @@ Sections: Sales summary → Daily breakdown (bar chart) → Top 10 products → 
 
 > **Update this section at the start of each session.**
 
-**Phase:** [x] Phase 1 — Setup | [x] Phase 2 — Design | [x] Phase 3 — Core Dev | [x] Phase 4 — Sales & Reports | [ ] Phase 5 — Polish
+**Phase:** [x] Phase 1 — Setup | [x] Phase 2 — Design | [x] Phase 3 — Core Dev | [x] Phase 4 — Sales & Reports | [x] Phase 5 — Polish
 
 **Current week focus:**
 - [x] Week 4 — Auth & navigation
@@ -164,16 +164,17 @@ Sections: Sales summary → Daily breakdown (bar chart) → Top 10 products → 
 - [x] Week 7 — Sales screen (product grid, cart, discounts)
 - [x] Week 8 — Payment modal, receipt, sale history
 - [x] Week 9 — Weekly reports + PDF export
+- [x] Week 10 — Staff management & polish
 
 **Last completed:**
-- Sales IPC: create sale (transaction with stock deduction), get all/by ID, void sale (restores stock)
-- Reports IPC: weekly summary, daily breakdown, top 10 by revenue/units, stock movement
-- POS Sales screen: product grid, cart with add/remove/qty stepper, item + cart discounts (BWP/%)
-- PaymentModal: cash (quick-fill + change calc), card, mixed (split)
-- Receipt: on-screen preview with print support
-- Sale history: today's transactions modal
-- Weekly Reports: date range picker, 5 KPI tiles, Recharts bar chart, top products, stock movement table
-- PDF export via jsPDF + AutoTable (branded layout with header, tables, page numbers)
+- Staff IPC: getAll, add (with duplicate PIN/name check), update, deactivate/reactivate toggle
+- Staff Management screen: full table with role badges, status badges, add/edit modal with PIN validation, deactivate toggle
+- Settings page: wired to IPC — load/save shop name, address, phone, default min threshold
+- Sales keyboard navigation: F1 focus search, F2 open payment, Escape clear search
+- Barcode scanner support: rapid keystroke detection auto-adds product to cart
+- Receipt now reads shop name from settings instead of hardcoded
+- Consistent Loader2 spinners across Dashboard, StockBalance, Reports, StaffManagement
+- Empty states on all data tables
 
 **Blocked on:**
 - *(none)*

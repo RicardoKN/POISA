@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, FileDown, Printer } from 'lucide-react'
+import { Calendar, FileDown, Printer, Loader2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import { generateReportPdf } from '../utils/pdf'
@@ -96,7 +96,9 @@ export default function Reports() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-ink-secondary">Loading report data...</p>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={24} className="animate-spin text-ink-muted" />
+        </div>
       ) : (
         <>
           {/* Sales summary KPIs */}

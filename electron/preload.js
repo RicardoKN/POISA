@@ -28,6 +28,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── Reports ──────────────────────────────────────────────
   getWeeklyReport: (startDate, endDate) => ipcRenderer.invoke('reports:weekly', startDate, endDate),
 
+  // ── Staff ──────────────────────────────────────────────
+  getAllStaff: () => ipcRenderer.invoke('staff:getAll'),
+  addStaff: (data) => ipcRenderer.invoke('staff:add', data),
+  updateStaff: (id, data) => ipcRenderer.invoke('staff:update', id, data),
+  toggleStaffActive: (id) => ipcRenderer.invoke('staff:deactivate', id),
+
   // ── Settings ─────────────────────────────────────────────
   getSetting: (key) => ipcRenderer.invoke('settings:get', key),
   getAllSettings: () => ipcRenderer.invoke('settings:getAll'),

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Search, Plus, Minus, Trash2, Percent, History } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '../store/authStore'
@@ -17,10 +17,106 @@ export default function Sales() {
   const [showHistory, setShowHistory] = useState(false)
   const [todaySales, setTodaySales] = useState([])
   const [processing, setProcessing] = useState(false)
+  const [shopName, setShopName] = useState('POISA Retail Store')
+  const searchRef = useRef(null)
+  const productGridRef = useRef(null)
 
   useEffect(() => {
     loadProducts()
+    // Load shop name from settings
+    const loadShopName = async () => {
+      try {
+        const api = window.electronAPI
+        if (api) {
+          const result = await api.getSetting('shop_name')
+          if (result.success && result.data) setShopName(result.data)
+        }
+      } catch { /* ignore */ }
+    }
+    loadShopName()
   }, [])
+
+  // ── Keyboard navigation ───────────────────────────────
+  const handleKeyDown = useCallback((e) => {
+    // Don't intercept when modals are open or inside discount/payment inputs
+    if (showPayment || completedSale || showHistory) return
+
+    // F1 → focus search
+    if (e.key === 'F1') {
+      e.preventDefault()
+      searchRef.current?.focus()
+      return
+    }
+
+    // F2 → open payment if cart has items
+    if (e.key === 'F2' && cart.length > 0 && !processing) {
+      e.preventDefault()
+      setShowPayment(true)
+      return
+    }
+
+    // Escape → clear search or deselect
+    if (e.key === 'Escape') {
+      if (searchQuery) {
+        setSearchQuery('')
+        searchRef.current?.blur()
+      }
+      return
+    }
+  }, [showPayment, completedSale, showHistory, cart.length, processing, searchQuery])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
+
+  // ── Barcode scanner support ───────────────────────────
+  // Rapid key input (within 50ms between chars) detected as scanner
+  const barcodeBuffer = useRef('')
+  const barcodeTimer = useRef(null)
+
+  useEffect(() => {
+    const handleBarcodeInput = (e) => {
+      if (showPayment || completedSale || showHistory) return
+      // Only capture when no text input is focused (except search)
+      const tag = e.target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        if (e.target !== searchRef.current) return
+      }
+
+      if (e.key === 'Enter' && barcodeBuffer.current.length >= 3) {
+        const barcode = barcodeBuffer.current
+        barcodeBuffer.current = ''
+        clearTimeout(barcodeTimer.current)
+        // Find product by barcode
+        const product = products.find((p) => p.barcode === barcode && p.quantity > 0)
+        if (product) {
+          addToCart(product)
+        } else {
+          toast.error(`No product found for barcode: ${barcode}`)
+        }
+        // Clear search if it captured the barcode
+        if (document.activeElement === searchRef.current) {
+          setSearchQuery('')
+        }
+        return
+      }
+
+      if (e.key.length === 1) {
+        barcodeBuffer.current += e.key
+        clearTimeout(barcodeTimer.current)
+        barcodeTimer.current = setTimeout(() => {
+          barcodeBuffer.current = ''
+        }, 100)
+      }
+    }
+
+    window.addEventListener('keydown', handleBarcodeInput)
+    return () => {
+      window.removeEventListener('keydown', handleBarcodeInput)
+      clearTimeout(barcodeTimer.current)
+    }
+  }, [products, showPayment, completedSale, showHistory])
 
   const loadProducts = async () => {
     try {
@@ -186,10 +282,11 @@ export default function Sales() {
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
               <input
+                ref={searchRef}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-sunken border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition duration-150"
-                placeholder="Search products by name or barcode..."
+                placeholder="Search products (F1) &middot; Scan barcode..."
               />
             </div>
             <button
@@ -347,7 +444,7 @@ export default function Sales() {
               disabled={cart.length === 0 || processing}
               className="w-full bg-slate-800 hover:bg-slate-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-base font-semibold py-4 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
             >
-              {processing ? 'Processing...' : 'Complete Sale'}
+              {processing ? 'Processing...' : 'Complete Sale (F2)'}
             </button>
           </div>
         </div>
@@ -365,7 +462,7 @@ export default function Sales() {
       {completedSale && (
         <Receipt
           sale={completedSale}
-          shopName="POISA Retail Store"
+          shopName={shopName}
           staffName={staff?.name}
           onClose={() => setCompletedSale(null)}
         />

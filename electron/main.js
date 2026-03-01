@@ -484,6 +484,85 @@ ipcMain.handle('reports:weekly', async (_event, startDate, endDate) => {
   }
 })
 
+// ── Staff ────────────────────────────────────────────
+
+ipcMain.handle('staff:getAll', async () => {
+  try {
+    const db = getDatabase()
+    const staff = db.prepare('SELECT id, name, role, is_active, created_at FROM staff ORDER BY name ASC').all()
+    return { success: true, data: staff }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('staff:add', async (_event, data) => {
+  try {
+    const db = getDatabase()
+
+    // Check for duplicate PIN
+    const existing = db.prepare('SELECT id FROM staff WHERE pin = ?').get(data.pin)
+    if (existing) {
+      return { success: false, error: 'This PIN is already in use by another staff member.' }
+    }
+
+    // Check for duplicate name
+    const existingName = db.prepare('SELECT id FROM staff WHERE LOWER(name) = LOWER(?)').get(data.name)
+    if (existingName) {
+      return { success: false, error: 'A staff member with this name already exists.' }
+    }
+
+    db.prepare('INSERT INTO staff (name, role, pin) VALUES (?, ?, ?)').run(data.name, data.role, data.pin)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('staff:update', async (_event, id, data) => {
+  try {
+    const db = getDatabase()
+
+    // If PIN is changing, check for duplicate
+    if (data.pin) {
+      const existing = db.prepare('SELECT id FROM staff WHERE pin = ? AND id != ?').get(data.pin, id)
+      if (existing) {
+        return { success: false, error: 'This PIN is already in use by another staff member.' }
+      }
+    }
+
+    // If name is changing, check for duplicate
+    if (data.name) {
+      const existingName = db.prepare('SELECT id FROM staff WHERE LOWER(name) = LOWER(?) AND id != ?').get(data.name, id)
+      if (existingName) {
+        return { success: false, error: 'A staff member with this name already exists.' }
+      }
+    }
+
+    if (data.pin) {
+      db.prepare('UPDATE staff SET name = ?, role = ?, pin = ? WHERE id = ?').run(data.name, data.role, data.pin, id)
+    } else {
+      db.prepare('UPDATE staff SET name = ?, role = ? WHERE id = ?').run(data.name, data.role, id)
+    }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('staff:deactivate', async (_event, id) => {
+  try {
+    const db = getDatabase()
+    const staff = db.prepare('SELECT is_active FROM staff WHERE id = ?').get(id)
+    if (!staff) return { success: false, error: 'Staff member not found' }
+    const newStatus = staff.is_active ? 0 : 1
+    db.prepare('UPDATE staff SET is_active = ? WHERE id = ?').run(newStatus, id)
+    return { success: true, data: { is_active: newStatus } }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
 // ── Settings ──────────────────────────────────────────────
 
 ipcMain.handle('settings:get', async (_event, key) => {

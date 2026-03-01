@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Search, Download, ArrowUpDown, Filter } from 'lucide-react'
+import { Search, Download, ArrowUpDown, Filter, Loader2 } from 'lucide-react'
 import { formatCurrency } from '../utils/formatters'
 
 const statusBadge = {
@@ -202,8 +202,8 @@ export default function StockBalance() {
           <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-sm text-ink-secondary">
-                  Loading stock data...
+                <td colSpan={7} className="px-4 py-12 text-center">
+                  <Loader2 size={20} className="animate-spin mx-auto text-ink-muted" />
                 </td>
               </tr>
             ) : displayed.length === 0 ? (
