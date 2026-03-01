@@ -7,6 +7,7 @@
     "dev": "vite",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "build": "vite build && electron-builder",
+    "build:win": "vite build && electron-builder --win",
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "knex migrate:latest --knexfile electron/db/knexfile.js",
