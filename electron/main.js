@@ -60,6 +60,34 @@ app.on('activate', () => {
 
 // ── Auth ──────────────────────────────────────────────────
 
+ipcMain.handle('auth:checkAdminExists', async () => {
+  try {
+    const db = getDatabase()
+    const admin = db.prepare("SELECT id FROM staff WHERE role = 'manager' AND is_active = 1 LIMIT 1").get()
+    return { success: true, exists: !!admin }
+  } catch (err) {
+    return { success: false, error: err.message, exists: true } // Defensive default
+  }
+})
+
+ipcMain.handle('auth:createFirstAdmin', async (_event, data) => {
+  try {
+    const db = getDatabase()
+    // Extra safety check to prevent overwriting or creating multiple initial admins
+    const admin = db.prepare("SELECT id FROM staff WHERE role = 'manager' AND is_active = 1 LIMIT 1").get()
+    if (admin) {
+      return { success: false, error: 'An admin already exists. Setup is locked.' }
+    }
+    
+    db.prepare('INSERT INTO staff (name, role, pin) VALUES (?, ?, ?)').run(data.name, 'manager', data.pin)
+    const newAdmin = db.prepare("SELECT id, name, role FROM staff WHERE pin = ? AND is_active = 1").get(data.pin)
+    
+    return { success: true, data: newAdmin }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
 ipcMain.handle('auth:login', async (_event, pin) => {
   try {
     const db = getDatabase()

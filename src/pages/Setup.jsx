@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Delete, Sparkles, LineChart, Heart, Loader2 } from 'lucide-react'
+import { Delete, Sparkles, LineChart, Heart, ShieldCheck } from 'lucide-react'
 import useAuthStore from '../store/authStore'
+import toast from 'react-hot-toast'
 
 const PIN_LENGTH = 4
 
-export default function Login() {
+export default function Setup() {
+  const [name, setName] = useState('')
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [initializing, setInitializing] = useState(true)
   const [shake, setShake] = useState(false)
   const [time, setTime] = useState(new Date())
+  const [nameFocused, setNameFocused] = useState(false)
 
   const navigate = useNavigate()
   const { login } = useAuthStore()
@@ -22,29 +24,6 @@ export default function Login() {
     return () => clearInterval(timer)
   }, [])
 
-  // Check if setup is needed
-  useEffect(() => {
-    const checkSetup = async () => {
-      try {
-        if (window.electronAPI) {
-          const result = await window.electronAPI.checkAdminExists()
-          if (result.success && !result.exists) {
-            navigate('/setup', { replace: true })
-          } else {
-            setInitializing(false)
-          }
-        } else {
-          // Dev fallback
-          setInitializing(false)
-        }
-      } catch (err) {
-        console.error("Setup check error:", err)
-        setInitializing(false)
-      }
-    }
-    checkSetup()
-  }, [navigate])
-
   const handleDigit = (digit) => {
     if (pin.length >= PIN_LENGTH || loading) return
     const newPin = pin + digit
@@ -53,7 +32,7 @@ export default function Login() {
     setPin(newPin)
 
     if (newPin.length === PIN_LENGTH) {
-      handleLogin(newPin)
+      handleSetup(newPin)
     }
   }
 
@@ -63,32 +42,36 @@ export default function Login() {
     setError('')
   }
 
-  const handleLogin = async (enteredPin) => {
+  const handleSetup = async (enteredPin) => {
+    if (!name.trim()) {
+      triggerError('Please enter your name first.')
+      setPin('')
+      return
+    }
+
     setLoading(true)
     try {
       if (window.electronAPI) {
-        const result = await window.electronAPI.login(enteredPin)
+        const result = await window.electronAPI.createFirstAdmin({ name: name.trim(), pin: enteredPin })
         if (result.success) {
+          toast.success('Admin account created successfully!')
           login(result.data)
           navigate('/dashboard')
         } else {
-          const attemptResult = await window.electronAPI.failedAttempt(enteredPin)
-          triggerError(attemptResult.error || result.error)
+          triggerError(result.error)
+          setPin('')
         }
       } else {
-        // Dev fallback when running outside Electron
-        if (enteredPin === '1234') {
-          login({ id: 1, name: 'Admin Manager', role: 'manager' })
+        // Dev fallback
+        setTimeout(() => {
+          toast.success('Admin account created! (Dev Mode)')
+          login({ id: 1, name: name.trim(), role: 'manager' })
           navigate('/dashboard')
-        } else if (enteredPin === '5678') {
-          login({ id: 2, name: 'Jane Cashier', role: 'cashier' })
-          navigate('/dashboard')
-        } else {
-          triggerError('Invalid PIN. Please try again.')
-        }
+        }, 1000)
       }
     } catch (err) {
       triggerError('An unexpected error occurred.')
+      setPin('')
     } finally {
       setLoading(false)
     }
@@ -96,7 +79,6 @@ export default function Login() {
 
   const triggerError = (msg) => {
     setError(msg)
-    setPin('')
     setShake(true)
     setTimeout(() => setShake(false), 500)
   }
@@ -104,17 +86,6 @@ export default function Login() {
   // Format date and time
   const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const dateString = time.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
-
-  if (initializing) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
-          <p className="text-slate-500 font-medium">Initializing Posia POS...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
@@ -128,74 +99,64 @@ export default function Login() {
         
         <div className="relative z-10">
           <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-white mb-3">POISA POS</h1>
-          <p className="text-indigo-200/90 font-medium text-lg lg:text-xl">Next-Generation Commerce Platform</p>
+          <p className="text-indigo-200/90 font-medium text-lg lg:text-xl">System Setup</p>
         </div>
 
         {/* Infographic Values Section */}
         <div className="relative z-10 flex-col gap-10 max-w-xl my-auto flex">
           
-          {/* Item 1 */}
           <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300">
             <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/20 transition-colors duration-300">
-              <Sparkles size={26} strokeWidth={2} />
+              <ShieldCheck size={26} strokeWidth={2} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white mb-2">Modern & Fast</h3>
-              <p className="text-slate-400 leading-relaxed text-[15px]">Experience a fluid, next-generation interface meticulously designed to accelerate your checkout process and eliminate friction.</p>
-            </div>
-          </div>
-
-          {/* Item 2 */}
-          <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300 delay-75">
-            <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400 group-hover:bg-blue-500/20 transition-colors duration-300">
-              <LineChart size={26} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white mb-2">Intelligent Operations</h3>
-              <p className="text-slate-400 leading-relaxed text-[15px]">Leverage real-time data insights to manage inventory, forecast sales, and optimize your business effortlessly.</p>
-            </div>
-          </div>
-
-          {/* Item 3 */}
-          <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300 delay-150">
-            <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors duration-300">
-              <Heart size={26} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white mb-2">Customer-Centric</h3>
-              <p className="text-slate-400 leading-relaxed text-[15px]">Focus entirely on the people that matter. Deepen relationships, build loyalty, and deliver an exceptional, highly-personalized service.</p>
+              <h3 className="text-xl font-bold text-white mb-2">Create Admin Account</h3>
+              <p className="text-slate-400 leading-relaxed text-[15px]">Welcome to your new point of sale system. To get started, please setup your initial administrator account.</p>
             </div>
           </div>
           
         </div>
 
         <div className="relative z-10 text-slate-500 text-sm font-medium">
-          &copy; {new Date().getFullYear()} POISA Systems. Empowering retail globally.
+          &copy; {new Date().getFullYear()} POISA Systems.
         </div>
       </div>
 
-      {/* RIGHT PANEL: Login Form */}
+      {/* RIGHT PANEL: Form */}
       <div className="w-full lg:w-[45%] flex items-center justify-center relative bg-gradient-to-br from-slate-50 to-slate-200">
         
-        {/* Decorative elements for right side */}
         <div className="absolute top-0 right-0 w-full h-[50%] bg-gradient-to-b from-white/80 to-transparent pointer-events-none"></div>
 
         <div className="relative z-10 bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/60 shadow-2xl p-10 w-full max-w-md mx-6 flex flex-col items-center">
           
           {/* Clock & Header */}
-          <div className="text-center mb-10 w-full">
-            <div className="mb-4">
-              <h2 className="text-[2.5rem] font-light text-slate-800 tracking-tight leading-none mb-1">{timeString}</h2>
-              <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold">{dateString}</p>
-            </div>
-            
-            {/* Show title only on mobile since the left panel handles branding on desktop */}
-            <h1 className="lg:hidden text-2xl font-black bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent mb-2">POISA POS</h1>
-            <p className="text-sm text-slate-500 font-medium">Enter your PIN to sign in</p>
+          <div className="text-center mb-6 w-full">
+            <h2 className="text-[2.5rem] font-light text-slate-800 tracking-tight leading-none mb-1">{timeString}</h2>
+            <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold">{dateString}</p>
+            <h1 className="lg:hidden mt-4 text-2xl font-black bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent mb-2">POISA POS Setup</h1>
+          </div>
+
+          <p className="text-sm text-slate-500 font-medium mb-4">Enter your name and choose a PIN</p>
+
+          <div className="w-full px-4 mb-6">
+            <input
+              type="text"
+              placeholder="Administrator Name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value)
+                setError('')
+              }}
+              onFocus={() => setNameFocused(true)}
+              onBlur={() => setNameFocused(false)}
+              className={`w-full px-4 py-3 bg-white border rounded-xl text-slate-800 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
+                nameFocused ? 'border-indigo-400 ring-4 ring-indigo-50' : 'border-slate-300'
+              }`}
+            />
           </div>
 
           {/* PIN dots (with shake class) */}
-          <div className={`flex justify-center gap-4 mb-6 h-4 w-full ${shake ? 'animate-shake' : ''}`}>
+          <div className={`flex justify-center gap-4 mb-4 h-4 w-full ${shake ? 'animate-shake' : ''}`}>
             {Array.from({ length: PIN_LENGTH }).map((_, i) => {
               const isFilled = i < pin.length;
               return (
@@ -212,9 +173,9 @@ export default function Login() {
           </div>
 
           {/* Error / Loading space */}
-          <div className="h-6 mb-6 w-full text-center flex items-center justify-center">
+          <div className="h-6 mb-4 w-full text-center flex items-center justify-center">
             {error && <p className="text-sm font-semibold text-rose-500">{error}</p>}
-            {loading && <p className="text-sm font-medium text-slate-500 animate-pulse">Signing in...</p>}
+            {loading && <p className="text-sm font-medium text-slate-500 animate-pulse">Creating account...</p>}
           </div>
 
           {/* PIN pad */}

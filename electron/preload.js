@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── Auth ─────────────────────────────────────────────────
   login: (pin) => ipcRenderer.invoke('auth:login', pin),
   failedAttempt: (pin) => ipcRenderer.invoke('auth:failedAttempt', pin),
+  checkAdminExists: () => ipcRenderer.invoke('auth:checkAdminExists'),
+  createFirstAdmin: (data) => ipcRenderer.invoke('auth:createFirstAdmin', data),
 
   // ── Products ─────────────────────────────────────────────
   getProducts: () => ipcRenderer.invoke('products:getAll'),
