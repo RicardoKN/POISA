@@ -32,6 +32,22 @@ module.exports = {
       boxShadow: {
         sm: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
       },
+      keyframes: {
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-5px)' },
+          '40%, 80%': { transform: 'translateX(5px)' },
+        },
+        pop: {
+          '0%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.2)' },
+          '100%': { transform: 'scale(1)' },
+        }
+      },
+      animation: {
+        shake: 'shake 0.4s ease-in-out',
+        pop: 'pop 0.2s ease-out',
+      },
     },
   },
   plugins: [],
