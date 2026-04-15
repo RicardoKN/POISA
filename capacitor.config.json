@@ -1,0 +1,6 @@
+{
+  "appId": "com.poisa.pos",
+  "appName": "POISA POS",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

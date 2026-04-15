@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">POISA POS</string>
+    <string name="title_activity_main">POISA POS</string>
+    <string name="package_name">com.poisa.pos</string>
+    <string name="custom_url_scheme">com.poisa.pos</string>
+</resources>
